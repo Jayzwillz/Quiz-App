@@ -2,6 +2,8 @@ const API_URL = "https://opentdb.com/api.php?amount=5&category=18&type=multiple"
 let quizData = [];
 let currentQuestionIndex = 0;
 let score = 0;
+let timeLeft = 30;
+let timerInterval;
 
 const questionElement = document.getElementById("question");
 const optionsElement = document.getElementById("options");
@@ -10,6 +12,9 @@ const resultContainer = document.getElementById("result");
 const scoreElement = document.getElementById("score");
 const restartButton = document.getElementById("restart-btn");
 const quizContainer = document.getElementById("quiz");
+const progressBar = document.querySelector(".progress");
+const timerElement = document.getElementById("timer");
+const darkModeButton = document.getElementById("dark-mode-toggle");
 
 async function fetchQuestions() {
     try {
@@ -22,8 +27,8 @@ async function fetchQuestions() {
         }));
         currentQuestionIndex = 0;
         score = 0;
-        resultContainer.style.display = "none"; // Ensure result section is hidden
-        quizContainer.style.display = "block"; // Show the quiz
+        resultContainer.style.display = "none";
+        quizContainer.style.display = "block";
         loadQuestion();
     } catch (error) {
         console.error("Error fetching questions:", error);
@@ -32,6 +37,7 @@ async function fetchQuestions() {
 
 function loadQuestion() {
     resetState();
+    startTimer();
     let currentQuestion = quizData[currentQuestionIndex];
     questionElement.innerHTML = currentQuestion.question;
 
@@ -43,19 +49,63 @@ function loadQuestion() {
         optionsElement.appendChild(button);
     });
 
-    nextButton.classList.remove("active"); 
+    nextButton.classList.remove("active");
     nextButton.disabled = true;
+
+    progressBar.style.width = `${((currentQuestionIndex + 1) / quizData.length) * 100}%`;
 }
 
 function resetState() {
     optionsElement.innerHTML = "";
     nextButton.classList.remove("active");
     nextButton.disabled = true;
+    clearInterval(timerInterval);
+    timeLeft = 30;
+    timerElement.textContent = timeLeft;
+}
+
+function startTimer() {
+    timerInterval = setInterval(() => {
+        timeLeft--;
+        timerElement.textContent = timeLeft;
+
+        if (timeLeft === 0) {
+            clearInterval(timerInterval);
+            handleTimeOut();
+        }
+    }, 1000);
+}
+
+function handleTimeOut() {
+    let correctAnswer = quizData[currentQuestionIndex].answer;
+    document.querySelectorAll(".option-btn").forEach(btn => {
+        btn.disabled = true;
+        if (btn.textContent === correctAnswer) {
+            btn.classList.add("correct"); // Highlight correct answer
+        } else {
+            btn.classList.add("wrong"); // Mark other options as incorrect
+        }
+    });
+
+    // Move to the next question automatically after 2 seconds
+    setTimeout(() => {
+        if (currentQuestionIndex < quizData.length - 1) {
+            currentQuestionIndex++;
+            loadQuestion();
+        } else {
+            showResult();
+        }
+    }, 2000);
 }
 
 function selectAnswer(button, isCorrect) {
-    document.querySelectorAll(".option-btn").forEach(btn => btn.disabled = true);
-    
+    document.querySelectorAll(".option-btn").forEach(btn => {
+        btn.disabled = true;
+        if (btn.textContent === quizData[currentQuestionIndex].answer) {
+            btn.classList.add("correct");
+        }
+    });
+
     if (isCorrect) {
         score++;
         button.classList.add("correct");
@@ -63,25 +113,27 @@ function selectAnswer(button, isCorrect) {
         button.classList.add("wrong");
     }
 
+    clearInterval(timerInterval);
     nextButton.classList.add("active");
     nextButton.disabled = false;
 }
 
 nextButton.addEventListener("click", () => {
     if (currentQuestionIndex < quizData.length - 1) {
-        currentQuestionIndex++; 
-        loadQuestion(); 
+        currentQuestionIndex++;
+        loadQuestion();
     } else {
-        showResult(); // ✅ Ensure results show at the last question
+        showResult();
     }
 });
 
 function showResult() {
-    quizContainer.style.display = "none"; // ✅ Hide quiz
-    resultContainer.style.display = "block"; // ✅ Show result
+    quizContainer.style.display = "none";
+    resultContainer.style.display = "block";
     scoreElement.textContent = `You scored ${score} out of ${quizData.length}! 🎉`;
 }
 
 restartButton.addEventListener("click", fetchQuestions);
+darkModeButton.addEventListener("click", () => document.body.classList.toggle("dark-mode"));
 
 fetchQuestions();

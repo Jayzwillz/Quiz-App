@@ -3,22 +3,35 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quiz App</title>
+    <title>Tech Quiz App</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <div class="quiz-container">
-        <h1>Quiz App</h1>
-        <div id="quiz">
-            <h2 id="question">Loading...</h2>
-            <div id="options"></div>
-            <button id="next-btn" disabled>Next</button>
+    <button id="dark-mode-toggle">🌙 Dark Mode</button>
+    
+    <div class="quiz-container" id="quiz">
+        <h1>Tech Quiz</h1>
+        
+        <!-- Progress Bar -->
+        <div class="progress-bar">
+            <div class="progress"></div>
         </div>
-        <div id="result" class="hidden">
-            <h2>Your Score: <span id="score"></span></h2>
-            <button id="restart-btn">Restart Quiz</button>
-        </div>
+
+        <!-- Timer -->
+        <div class="timer">Time Left: <span id="timer">30</span>s</div>
+
+        <h2 id="question">Loading question...</h2>
+        <div id="options" class="options-container"></div>
+        <button id="next-btn" disabled>Next</button>
     </div>
+
+    <!-- Result Section -->
+    <div id="result" class="result-container" style="display: none;">
+        <h2>Quiz Completed!</h2>
+        <p id="score"></p>
+        <button id="restart-btn">Restart Quiz</button>
+    </div>
+
     <script src="script.js"></script>
 </body>
 </html>
