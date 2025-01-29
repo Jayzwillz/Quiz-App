@@ -1,9 +1,14 @@
-const API_URL = "https://opentdb.com/api.php?amount=5&category=18&type=multiple";
+const BASE_API_URL = "https://opentdb.com/api.php?amount=5&category=18&type=multiple";
 let quizData = [];
 let currentQuestionIndex = 0;
 let score = 0;
 let timeLeft = 30;
 let timerInterval;
+let selectedDifficulty = "easy";
+
+const difficultySelection = document.getElementById("difficulty-selection");
+const difficultyButtons = document.querySelectorAll(".difficulty-btn");
+const difficultyText = document.getElementById("difficulty-level");
 
 const questionElement = document.getElementById("question");
 const optionsElement = document.getElementById("options");
@@ -16,9 +21,16 @@ const progressBar = document.querySelector(".progress");
 const timerElement = document.getElementById("timer");
 const darkModeButton = document.getElementById("dark-mode-toggle");
 
+difficultyButtons.forEach(button => {
+    button.addEventListener("click", () => {
+        selectedDifficulty = button.getAttribute("data-difficulty");
+        startQuiz();
+    });
+});
+
 async function fetchQuestions() {
     try {
-        const response = await fetch(API_URL);
+        const response = await fetch(`${BASE_API_URL}&difficulty=${selectedDifficulty}`);
         const data = await response.json();
         quizData = data.results.map(q => ({
             question: q.question,
@@ -29,10 +41,16 @@ async function fetchQuestions() {
         score = 0;
         resultContainer.style.display = "none";
         quizContainer.style.display = "block";
+        difficultySelection.style.display = "none";
+        difficultyText.textContent = `Difficulty: ${selectedDifficulty.toUpperCase()}`;
         loadQuestion();
     } catch (error) {
         console.error("Error fetching questions:", error);
     }
+}
+
+function startQuiz() {
+    fetchQuestions();
 }
 
 function loadQuestion() {
@@ -81,13 +99,12 @@ function handleTimeOut() {
     document.querySelectorAll(".option-btn").forEach(btn => {
         btn.disabled = true;
         if (btn.textContent === correctAnswer) {
-            btn.classList.add("correct"); // Highlight correct answer
+            btn.classList.add("correct");
         } else {
-            btn.classList.add("wrong"); // Mark other options as incorrect
+            btn.classList.add("wrong");
         }
     });
 
-    // Move to the next question automatically after 2 seconds
     setTimeout(() => {
         if (currentQuestionIndex < quizData.length - 1) {
             currentQuestionIndex++;
@@ -133,7 +150,10 @@ function showResult() {
     scoreElement.textContent = `You scored ${score} out of ${quizData.length}! 🎉`;
 }
 
-restartButton.addEventListener("click", fetchQuestions);
-darkModeButton.addEventListener("click", () => document.body.classList.toggle("dark-mode"));
+restartButton.addEventListener("click", () => {
+    difficultySelection.style.display = "block";
+    quizContainer.style.display = "none";
+    resultContainer.style.display = "none";
+});
 
-fetchQuestions();
+darkModeButton.addEventListener("click", () => document.body.classList.toggle("dark-mode"));
